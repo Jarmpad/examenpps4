@@ -70,5 +70,5 @@ jobs:
           script: |
             sleep 30
             docker rm -f web1
-            docker rmi ${{ secrets.AMZ_USUARIO }}/${{ env.IMAGE_NAME }}
-            docker run -d -p 80:5000 --name web1 ${{secrets.AMZ_USUARIO}/${{env.IMAGE_NAME}}
+            docker rmi ${{ secrets.DH_USUARIO }}/${{ env.IMAGE_NAME }}
+            docker run -d -p 80:5000 --name web1 ${{secrets.DH_USUARIO}}/${{env.IMAGE_NAME}}
