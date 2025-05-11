@@ -1,14 +1,22 @@
-name: docker&aws
+name: Docker & AWS Deployment
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'app/**'
+      - 'src/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'requirements.txt'
   pull_request:
     branches: [ main ]
     paths:
-      - 'app/**'
+      - 'src/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'requirements.txt'
+  # Permite ejecutar manualmente desde la interfaz de GitHub
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: fastapi
@@ -17,7 +25,7 @@ env:
 
 jobs:
   build:
-    name: build and push Docker image
+    name: Build and push Docker image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -36,15 +44,15 @@ jobs:
           push: true 
           tags: ${{ secrets.DH_USUARIO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-  aws:
-    name: Deploy image to aws
+  deploy:
+    name: Deploy to AWS
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Copy docker compose via ssh key
+      - name: Copy docker compose via SSH
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.AMZ_IP }}
@@ -62,8 +70,9 @@ jobs:
           key: ${{ secrets.AMZ_CLAVE }}
           port: 22
           script: |
-            sleep 30
+            cd /home/admin
+            docker compose pull
             docker compose down
-            docker rmi ${{ secrets.DH_USUARIO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            docker compose up -d traefik whoami 
+            docker rmi ${{ secrets.DH_USUARIO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || true
+            docker compose up -d traefik whoami
             docker compose up -d api
