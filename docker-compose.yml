@@ -1,31 +1,47 @@
-version: '3.8'
-
 services:
   traefik:
-    image: traefik:v3.0  # Asegúrate de tener la versión correcta
+    image: "traefik:v3.2"
+    container_name: "traefik"
     command:
+      - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
-      - "8080:8080" # Dashboard de Traefik
+      - "8000:8000"
+      - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - web
 
   whoami:
-    image: traefik/whoami
+    image: "traefik/whoami"
+    container_name: "whoami"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
-      - "traefik.http.routers.whoami.entrypoints=web"
+    networks:
+      - web
 
-  app:
+  api:
     build: .
+    image: jarmpad/fastapi
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.app.rule=Host(`app.localhost`)"
-      - "traefik.http.routers.app.entrypoints=web"
-    expose:
-      - "8000"
+      - "traefik.http.routers.api.rule=Host(`app.localhost`)"
+    networks:
+      - web
 
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - web
+
+networks:
+  web:
