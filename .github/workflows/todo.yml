@@ -1,7 +1,7 @@
 name: CI/CD completo
 
 env:
-  IMAGE_NAME: galeria
+  IMAGE_NAME: jarmpad/fastapi
   # FILES: compose.yml
 
 # GitHub Secrets
